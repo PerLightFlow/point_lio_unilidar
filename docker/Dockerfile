@@ -25,6 +25,8 @@ RUN apt-get update \
     && apt install -y python3-dev \
     && apt install -y libpython3-dev \
     && apt install -y software-properties-common \
+    && apt install -y mesa-utils \
+    && apt install -y net-tools \
     && rm -rf /var/lib/apt/lists/*
 
 # Create user with sudo privileges
