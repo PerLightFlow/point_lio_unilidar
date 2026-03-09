@@ -1,7 +1,7 @@
 #include "FOV_Checker.h"
 
 FOV_Checker::FOV_Checker(){
-    // fp = fopen("/home/ecstasy/catkin_ws/fov_data.csv","w");
+    // fp = fopen("/tmp/fov_data.csv","w");
     // fprintf(fp,"cur_pose_x,cur_pose_y,cur_pose_z,axis_x,axis_y,axis_z,theta,depth\n");
     // fclose(fp);
 }
@@ -33,7 +33,7 @@ void FOV_Checker::check_fov(Eigen::Vector3d cur_pose, Eigen::Vector3d axis, doub
     round_v3d(cur_pose,4);
     round_v3d(axis,3);
     axis = axis/axis.norm();
-    // fp = fopen("/home/ecstasy/catkin_ws/fov_data.csv","a");
+    // fp = fopen("/tmp/fov_data.csv","a");
     // fprintf(fp,"%f,%f,%f,%f,%f,%f,%0.4f,%0.1f,",cur_pose(0),cur_pose(1),cur_pose(2),axis(0),axis(1),axis(2),theta,depth);
     // fclose(fp);
     // cout << "cur_pose: " << cur_pose.transpose() << endl;

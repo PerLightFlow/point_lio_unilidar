@@ -1,0 +1,55 @@
+/**:
+  ros__parameters:
+    prop_at_freq_of_imu: true
+    use_imu_as_input: false
+    check_satu: true
+    init_map_size: 10
+    point_filter_num: 1
+    space_down_sample: true
+    filter_size_surf: 0.4
+    filter_size_map: 0.4
+    cube_side_length: 1000.0
+    runtime_pos_log_enable: false
+    common.lid_topic: /unilidar/cloud
+    common.imu_topic: /unilidar/imu
+    common.con_frame: false
+    common.con_frame_num: 1
+    common.cut_frame: false
+    common.cut_frame_time_interval: 0.1
+    common.time_lag_imu_to_lidar: 0.0
+    preprocess.lidar_type: 5
+    preprocess.scan_line: 18
+    preprocess.timestamp_unit: 0
+    preprocess.blind: 0.5
+    preprocess.scan_rate: 10
+    mapping.imu_en: true
+    mapping.start_in_aggressive_motion: false
+    mapping.extrinsic_est_en: false
+    mapping.imu_time_inte: 0.001
+    mapping.satu_acc: 30.0
+    mapping.satu_gyro: 35.0
+    mapping.acc_norm: 9.81
+    mapping.lidar_meas_cov: 0.01
+    mapping.acc_cov_output: 500.0
+    mapping.gyr_cov_output: 1000.0
+    mapping.b_acc_cov: 0.001
+    mapping.b_gyr_cov: 0.001
+    mapping.imu_meas_acc_cov: 0.5
+    mapping.imu_meas_omg_cov: 0.5
+    mapping.gyr_cov_input: 0.1
+    mapping.acc_cov_input: 0.5
+    mapping.plane_thr: 0.1
+    mapping.match_s: 81.0
+    mapping.fov_degree: 180.0
+    mapping.det_range: 100.0
+    mapping.gravity_align: true
+    mapping.gravity: [0.0, 0.0, -9.81]
+    mapping.gravity_init: [0.0, 0.0, -9.81]
+    mapping.extrinsic_T: [0.007698, 0.014655, -0.00667]
+    mapping.extrinsic_R: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+    odometry.publish_odometry_without_downsample: true
+    publish.path_en: true
+    publish.scan_publish_en: true
+    publish.scan_bodyframe_pub_en: false
+    pcd_save.pcd_save_en: true
+    pcd_save.interval: -1

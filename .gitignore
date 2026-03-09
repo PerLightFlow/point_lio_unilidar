@@ -1,2 +1,7 @@
-.vscode
-./PCD/scans.pcd
+.vscode/
+.idea/
+cmake-build-debug/
+PCD/scans.pcd
+build/
+install/
+log/

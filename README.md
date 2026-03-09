@@ -1,231 +1,123 @@
 # point_lio_unilidar
 
-## 1. Introduction
+`point_lio_unilidar` 当前已整理为 **ROS2 Humble only** 版本，用于与 `/home/s5376/ros_ws/src/unilidar_sdk2` 等 ROS2 节点生态配合使用。
 
-### 1.1 Unitree LiDAR
+## 当前保留内容
 
-This repository adapts the state-of-the-art lidar inertial odometry algorithm, `Point-LIO`, for use with our lidar products:
-- `Unitree LiDAR L1`
-- `Unitree LiDAR L2`
+- ROS2 `ament_cmake` 构建系统
+- ROS2 节点实现：`pointlio_mapping`
+- ROS2 参数文件：
+  - `config/unilidar_l1.ros2.yaml`
+  - `config/unilidar_l2.ros2.yaml`
+- ROS2 启动文件：
+  - `launch/mapping_unilidar_l1.launch.py`
+  - `launch/mapping_unilidar_l2.launch.py`
+- RViz2 配置：`rviz_cfg/loam_livox.rviz`
 
-Both `L1` and `L2` possess these features:
-- large field of view (360° × 90°)
-- non-repetitive scanning
-- low cost
-- suitable for applications in low-speed mobile robots
+## 已移除的旧内容
 
-If you want to learn more about our lidar products, you can refer to the official website for details.
-- <https://www.unitree.com/L2>
-- <https://www.unitree.com/LiDAR>
+- 旧版构建链路与遗留入口
+- ROS1 XML launch 文件
+- ROS1 参数 YAML
+- RViz1 配置
+- ROS1/Noetic 对应的仓库级使用入口
 
+## 主要 ROS2 适配点
 
-### 1.2 Point-LIO
+- 节点、发布与订阅接口统一到 `rclcpp`
+- TF 广播接口统一到 `tf2_ros::TransformBroadcaster`
+- 参数系统已迁移到 ROS2 `declare_parameter` / `get_parameter`
+- 输入接口统一为：
+  - LiDAR：`sensor_msgs/msg/PointCloud2`
+  - IMU：`sensor_msgs/msg/Imu`
+- 地图相关输出：
+  - `/pointlio/cloud_registered`
+  - `/pointlio/cloud_effected`
+  - `/pointlio/laser_map`
+  - `/pointlio/odom`
+  - `/pointlio/path`
 
-`Point-LIO` is a robust and high-bandwidth lidar inertial odometry (LIO) with the capability to provide accurate, high-frequency odometry and reliable mapping under severe vibrations and aggressive motions. If you need further information about the `Point-LIO` algorithm, you can refer to their official website and paper:
-- <https://github.com/hku-mars/Point-LIO>
-- [Point‐LIO: Robust High‐Bandwidth Light Detection and Ranging Inertial Odometry](https://onlinelibrary.wiley.com/doi/epdf/10.1002/aisy.202200459)
+## 默认与 `unilidar_sdk2` 的接口约定
 
+默认参数面向以下话题：
 
-## 2. Video Demos
+- 点云：`/unilidar/cloud`
+- IMU：`/unilidar/imu`
 
-### 2.1 L1 LiDAR
+如需适配其他 bag 或驱动，请修改：
 
-[![Video](./doc/video.png)](https://oss-global-cdn.unitree.com/static/c0bd0ac7d1e147e7a7eaf909f1fc214f.mp4 "SLAM based on Unitree 4D LiDAR L1")
+- `common.lid_topic`
+- `common.imu_topic`
+- `preprocess.lidar_type`
+- `preprocess.scan_line`
+- `preprocess.timestamp_unit`
 
-### 2.2 L2 LiDAR
- 
-[![Video](./doc/l2-demo-video-bilibili.png)](https://www.bilibili.com/video/BV1XVUVYHEHR "SLAM based on Unitree 4D LiDAR L2")
+## 编译
 
-[YouTube](https://youtu.be/juAfGrg2xBg?si=IVTWM9shEmHsKKJ_)
+在工作空间内编译：
 
-
-## 3. Prerequisites
-
-### 3.1 Ubuntu and ROS
-We tested our code on Ubuntu20.04 with [ROS noetic](http://wiki.ros.org/noetic/Installation/Ubuntu). Ubuntu18.04 and lower versions have problems of environments to support the Point-LIO, try to avoid using Point-LIO in those systems. 
-
-You can refer to the official website to install ROS noetic:
-- <http://wiki.ros.org/noetic/Installation/Ubuntu>
-
-Additional ROS package is required:
-```
-sudo apt-get install ros-xxx-pcl-conversions
-```
-
-### 3.2 Eigen
-Following the official [Eigen installation](eigen.tuxfamily.org/index.php?title=Main_Page), or directly install Eigen by:
-```
-sudo apt-get install libeigen3-dev
-```
-
-### 3.3 unilidar_sdk
-
-For using lidar `L1`, you should download and build [unilidar_sdk](https://github.com/unitreerobotics/unilidar_sdk) follwing these steps:
-
-```
-git clone https://github.com/unitreerobotics/unilidar_sdk.git
-
-cd unilidar_sdk/unitree_lidar_ros
-
-catkin_make
+```bash
+source /opt/ros/humble/setup.bash
+cd /home/s5376/ros_ws
+colcon build --packages-select point_lio_unilidar
+source install/local_setup.bash
 ```
 
-### 3.4 unilidar_sdk2
+单独在包目录验证构建：
 
-For using lidar `L2`, you should download and build [unilidar_sdk2](https://github.com/unitreerobotics/unilidar_sdk2) follwing these steps:
-
-```
-git clone https://github.com/unitreerobotics/unilidar_sdk2.git
-
-cd unilidar_sdk/unitree_lidar_ros
-
-catkin_make
+```bash
+source /opt/ros/humble/setup.bash
+cd /home/s5376/ros_ws/src/point_lio_unilidar
+colcon build \
+  --packages-select point_lio_unilidar \
+  --base-paths .
 ```
 
-## 4. Build
+## 运行
 
-Clone this repository and run `catkin_make`:
+### 1) 对接 `unilidar_sdk2`
 
-```
-mkdir -p catkin_point_lio_unilidar/src
+终端 1：启动雷达驱动。
 
-cd catkin_point_lio_unilidar/src
+终端 2：启动建图。
 
-git clone https://github.com/unitreerobotics/point_lio_unilidar.git
-
-cd ..
-
-catkin_make
+```bash
+source /opt/ros/humble/setup.bash
+source /home/s5376/ros_ws/install/local_setup.bash
+ros2 launch point_lio_unilidar mapping_unilidar_l2.launch.py
 ```
 
+### 2) 播放 ROS2 bag 验证
 
-## 5. Run
-
-### 5.1 Run with L1
-
-To ensure proper initialization of the IMU, it is advisable to keep the lidar in a stationary state during the initial few seconds of algorithm execution.
-
-Run `unilidar`:
-```
-cd unilidar_sdk/unitree_lidar_ros
-
-source devel/setup.bash
-
-roslaunch unitree_lidar_ros run_without_rviz.launch
+```bash
+source /opt/ros/humble/setup.bash
+source /home/s5376/ros_ws/install/local_setup.bash
+ros2 launch point_lio_unilidar mapping_unilidar_l2.launch.py
 ```
 
-Run `Point-LIO`:
-```
-cd catkin_unilidar_point_lio
+另开终端播放 bag：
 
-source devel/setup.bash
-
-roslaunch point_lio_unilidar mapping_unilidar_l1.launch 
+```bash
+source /opt/ros/humble/setup.bash
+ros2 bag play /home/s5376/下载/Simple-LIO-SAM/ros2/park_dataset
 ```
 
+如果 bag 话题不是默认的 `/unilidar/cloud` 和 `/unilidar/imu`，请复制一份参数文件后修改对应 topic。
 
-After completion of the run, all cached pointcloud map will be saved to the following path:
-```
-catkin_point_lio_unilidar/src/point_lio_unilidar/PCD/scans.pcd
-```
+## RViz2 说明
 
-You can use the `pcl_viewer` tool to view this pcd file:
-```
-pcl_viewer scans.pcd 
-```
+默认 RViz2 配置显示累积地图话题 `/pointlio/laser_map`，用于替代仅显示当前帧点云的效果。
 
-### 5.2 Run with rosbag of L1
+如果看到的是纯白地图点云，这通常只是 RViz2 的着色方式，不代表算法退化；当前配置已切到按 `Z` 轴着色，便于观察空间结构。
 
-If you don't have our lidar for now, you can download our dataset recorded with our lidar and run testify this algorithm with it.
-The download address is here:
-- [unilidar-2023-09-22-12-42-04.bag - Download](https://oss-global-cdn.unitree.com/static/unilidar-2023-09-22-12-42-04.zip)
+## 当前已知问题
 
+- 重复播放同一 bag 时，时间戳回退会触发 buffer 清理告警
+- 退出节点时，偶发仍可能存在析构阶段不够平滑的问题
+- 与更大规模 ROS2 系统联调前，仍建议继续检查 TF、odom 语义与 Nav2 接口一致性
 
-Run `Point-LIO`:
-```
-cd catkin_point_lio_unilidar
+## 备注
 
-source devel/setup.bash
-
-roslaunch point_lio_unilidar mapping_unilidar_l1.launch 
-```
-
-Play the dataset you downloaded:
-```
-rosbag play unilidar-2023-09-22-12-42-04.bag 
-```
-
-
-After completion of the run, all cached pointcloud map will be saved to the following path:
-```
-catkin_point_lio_unilidar/src/point_lio_unilidarPCD/scans.pcd
-```
-
-You can use the `pcl_viewer` tool to view this pcd file:
-```
-pcl_viewer scans.pcd 
-```
-
-### 5.3 Run with L2
-
-To ensure proper initialization of the IMU, it is advisable to keep the lidar in a stationary state during the initial few seconds of algorithm execution.
-
-Run `unilidar`:
-```
-cd unilidar_sdk/unitree_lidar_ros
-
-source devel/setup.bash
-
-roslaunch unitree_lidar_ros run_without_rviz.launch
-```
-
-Run `Point-LIO`:
-```
-cd catkin_unilidar_point_lio
-
-source devel/setup.bash
-
-roslaunch point_lio_unilidar mapping_unilidar_l2.launch 
-```
-
-After completion of the run, all cached pointcloud map will be saved to the following path:
-```
-catkin_point_lio_unilidar/src/point_lio_unilidar/PCD/scans.pcd
-```
-
-You can use the `pcl_viewer` tool to view this pcd file:
-```
-pcl_viewer scans.pcd 
-```
-
-### 5.4 Run with rosbag of L2
-
-If you don't have our lidar for now, you can download our dataset recorded with our lidar and run testify this algorithm with it.
-The download address is here:
-- [L2 Indoor Point Cloud Data.bag - Download](https://oss-global-cdn.unitree.com/static/L2%20Indoor%20Point%20Cloud%20Data.bag)
-- [L2 Park Observed Point Cloud Data.bag - Download](https://oss-global-cdn.unitree.com/static/L2%20Park%20Point%20Cloud%20Data.bag)
-
-
-Run `Point-LIO`:
-```
-cd catkin_point_lio_unilidar
-
-source devel/setup.bash
-
-roslaunch point_lio_unilidar mapping_unilidar_l2.launch 
-```
-
-Play the dataset you downloaded:
-```
-rosbag play XXXXXX.bag 
-```
-
-After completion of the run, all cached pointcloud map will be saved to the following path:
-```
-catkin_point_lio_unilidar/src/point_lio_unilidarPCD/scans.pcd
-```
-
-You can use the `pcl_viewer` tool to view this pcd file:
-```
-pcl_viewer scans.pcd 
-```
+- 仓库当前目标是仅维护 ROS2 Humble 使用链路
+- `/home/s5376/ros_ws/src/unilidar_sdk2` 本轮未做修改
+- bag 调试时使用过的临时参数文件已删除，不保留在仓库中
